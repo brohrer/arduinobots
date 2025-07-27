@@ -1,8 +1,10 @@
 #include <Arduino_LSM6DS3.h>
 
-const int CALIBRATION_COUNT = 100;
-const float CALIBRATION_DELAY = 30;  // milliseconds
-const float LOOP_DELAY = 20000;  // milliseconds
+const int CALIBRATION_COUNT = 30000;
+const float CALIBRATION_DELAY = 10;  // milliseconds
+const float LOOP_DELAY = 2000000;  // milliseconds
+const float LOCAL_GRAVITY = 9.8039 / 9.80665;  // g's
+const int OFFSET_PRECISION = 4;  // The number of decimal places
 
 float a_x, a_y, a_z;
 float w_x, w_y, w_z;
@@ -34,7 +36,7 @@ void setup() {
   Serial.println();
   
   //Zero the gyroscope and accelerometers
-  Serial.println("Let the board lie flat and still for 5 seconds");
+  Serial.println("Let the board lie flat and still for a couple of minutes");
   float a_x_sum = 0.0, a_y_sum = 0.0, a_z_sum = 0.0;
   float w_x_sum = 0.0, w_y_sum = 0.0, w_z_sum = 0.0;
   int acc_count = 0, gyro_count = 0;
@@ -55,14 +57,17 @@ void setup() {
         gyro_count ++;
     }
 
-    if (acc_count > CALIBRATION_COUNT and gyro_count > CALIBRATION_COUNT) {
+    Serial.print(acc_count);
+    Serial.print("   ");
+    Serial.println(1000 * (a_z - 1.01), 2);
+    if (acc_count >= CALIBRATION_COUNT and gyro_count >= CALIBRATION_COUNT) {
       done = true;
     }
     delay(CALIBRATION_DELAY);
   }
   a_x_offset = -a_x_sum / acc_count;    
   a_y_offset = -a_y_sum / acc_count;
-  a_z_offset = -a_z_sum / acc_count;
+  a_z_offset = -a_z_sum / acc_count + LOCAL_GRAVITY;
 
   w_x_offset = -w_x_sum / gyro_count;    
   w_y_offset = -w_y_sum / gyro_count;
@@ -70,36 +75,21 @@ void setup() {
 }
 
 void loop() {
-  if (IMU.temperatureAvailable()) {
-    IMU.readTemperature(t);
-    Serial.println();
-    Serial.println("temperature (C)");  
-    Serial.println(t);
-  }  
+  Serial.println();
+  Serial.println("acceleration offsets (g)");
+  Serial.print(a_x_offset, OFFSET_PRECISION);
+  Serial.print('\t');
+  Serial.print(a_y_offset, OFFSET_PRECISION);
+  Serial.print('\t');
+  Serial.println(a_z_offset, OFFSET_PRECISION);
 
-  if (IMU.accelerationAvailable()) {
-      IMU.readAcceleration(a_x, a_y, a_z);
-
-      Serial.println();
-      Serial.println("acceleration (g)");
-      Serial.print(a_x + a_x_offset);
-      Serial.print('\t');
-      Serial.print(a_y + a_y_offset);
-      Serial.print('\t');
-      Serial.println(a_z + a_z_offset);
-  }
-
-  if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(w_x, w_y, w_z);
-
-    Serial.println();
-    Serial.println("angular velocity (dps)");
-    Serial.print(w_x + w_x_offset);
-    Serial.print('\t');
-    Serial.print(w_y + w_y_offset);
-    Serial.print('\t');
-    Serial.println(w_z + w_z_offset);
-  }
+  Serial.println();
+  Serial.println("angular velocity offsets (dps)");
+  Serial.print(w_x_offset, OFFSET_PRECISION);
+  Serial.print('\t');
+  Serial.print(w_y_offset, OFFSET_PRECISION);
+  Serial.print('\t');
+  Serial.println(w_z_offset, OFFSET_PRECISION);
 
   delay(LOOP_DELAY);
 }

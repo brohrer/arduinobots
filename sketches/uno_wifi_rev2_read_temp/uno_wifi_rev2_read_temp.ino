@@ -33,6 +33,7 @@ void setup() {
 void loop() {
   float temp_raw, temp_c, temp_f;
   float sensitivity_correction;
+  int seconds_between_measurements = 1;
 
   if (IMU.temperatureAvailable()) {
     // after IMU.readTemperature() returns, t will contain the temperature reading
@@ -58,6 +59,6 @@ void loop() {
     Serial.print(" (");
     Serial.print(temp_f, 3);
     Serial.println(")");
-    while(1);
+    delay(seconds_between_measurements * 1000);
   }
 }

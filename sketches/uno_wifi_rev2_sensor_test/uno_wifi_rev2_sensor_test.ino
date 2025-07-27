@@ -1,13 +1,54 @@
 #include <Arduino_LSM6DS3.h>
 
-const int CALIBRATION_COUNT = 100;
-const float CALIBRATION_DELAY = 30;  // milliseconds
-const float LOOP_DELAY = 20000;  // milliseconds
+const float LOOP_DELAY = 2000;  // milliseconds
+
+// measured during the calibration routine in
+// https://github.com/brohrer/arduinobots/blob/main/sketches/uno_wifi_rev2_calibration/uno_wifi_rev2_calibration.ino 
+const float A_X_OFFSET;
+const float A_Y_OFFSET;
+const float A_Z_OFFSET;
+const float W_X_OFFSET = -0.3;
+const float W_Y_OFFSET;
+const float W_Z_OFFSET;
+
+17:55:59.046 -> acceleration offsets (g)
+17:55:59.078 -> 0.0081	-0.0025	-0.0189
+17:55:59.078 -> 
+17:55:59.109 -> angular velocity offsets (dps)
+17:55:59.142 -> -0.3186	0.0250	-0.3854
+
+18:16:58.672 -> acceleration offsets (g)
+18:16:58.704 -> 0.0077	-0.0033	-0.0199
+18:16:58.737 -> 
+18:16:58.737 -> angular velocity offsets (dps)
+18:16:58.768 -> -0.4261	0.0387	-0.4015
+
+18:41:47.970 -> acceleration offsets (g)
+18:41:48.003 -> 0.0080	-0.0025	-0.0178
+18:41:48.035 -> 
+18:41:48.035 -> angular velocity offsets (dps)
+18:41:48.067 -> -0.3473	0.0283	-0.3829
+
+19:01:58.858 -> acceleration offsets (g)
+19:01:58.890 -> 0.0078	-0.0028	-0.0199
+19:01:58.922 -> 
+19:01:58.922 -> angular velocity offsets (dps)
+19:01:58.953 -> -0.4387	0.0371	-0.3997
+
+20:04:00.152 -> acceleration offsets (g)
+20:04:00.152 -> 0.0078	-0.0020	-0.0185
+20:04:00.184 -> 
+20:04:00.184 -> angular velocity offsets (dps)
+20:04:00.216 -> -0.3499	0.0261	-0.3820
+
+acceleration offsets (g)
+0.0076	-0.0027	-0.0199
+
+angular velocity offsets (dps)
+-0.4307	0.0401	-0.3921
 
 float a_x, a_y, a_z;
 float w_x, w_y, w_z;
-float a_x_offset, a_y_offset, a_z_offset;
-float w_x_offset, w_y_offset, w_z_offset;
 float t;
 
 void setup() {
@@ -31,42 +72,7 @@ void setup() {
   Serial.print("Gyroscope sample rate = ");
   Serial.print(IMU.gyroscopeSampleRate());
   Serial.println(" Hz");
-  Serial.println();
-  
-  //Zero the gyroscope and accelerometers
-  Serial.println("Let the board lie flat and still for 5 seconds");
-  float a_x_sum = 0.0, a_y_sum = 0.0, a_z_sum = 0.0;
-  float w_x_sum = 0.0, w_y_sum = 0.0, w_z_sum = 0.0;
-  int acc_count = 0, gyro_count = 0;
-  bool done = false;
-  while (!done) {
-    if (IMU.accelerationAvailable()) {
-        IMU.readAcceleration(a_x, a_y, a_z);
-        a_x_sum += a_x;
-        a_y_sum += a_y;
-        a_z_sum += a_z;
-        acc_count ++;
-    }
-    if (IMU.gyroscopeAvailable()) {
-      IMU.readGyroscope(w_x, w_y, w_z);
-        w_x_sum += w_x;
-        w_y_sum += w_y;
-        w_z_sum += w_z;
-        gyro_count ++;
-    }
-
-    if (acc_count > CALIBRATION_COUNT and gyro_count > CALIBRATION_COUNT) {
-      done = true;
-    }
-    delay(CALIBRATION_DELAY);
-  }
-  a_x_offset = -a_x_sum / acc_count;    
-  a_y_offset = -a_y_sum / acc_count;
-  a_z_offset = -a_z_sum / acc_count;
-
-  w_x_offset = -w_x_sum / gyro_count;    
-  w_y_offset = -w_y_sum / gyro_count;
-  w_z_offset = -w_z_sum / gyro_count;
+  Serial.println();  
 }
 
 void loop() {
@@ -82,11 +88,11 @@ void loop() {
 
       Serial.println();
       Serial.println("acceleration (g)");
-      Serial.print(a_x + a_x_offset);
+      Serial.print(a_x + A_X_OFFSET);
       Serial.print('\t');
-      Serial.print(a_y + a_y_offset);
+      Serial.print(a_y + A_Y_OFFSET);
       Serial.print('\t');
-      Serial.println(a_z + a_z_offset);
+      Serial.println(a_z + A_Z_OFFSET);
   }
 
   if (IMU.gyroscopeAvailable()) {
@@ -94,11 +100,11 @@ void loop() {
 
     Serial.println();
     Serial.println("angular velocity (dps)");
-    Serial.print(w_x + w_x_offset);
+    Serial.print(w_x + W_X_OFFSET);
     Serial.print('\t');
-    Serial.print(w_y + w_y_offset);
+    Serial.print(w_y + W_Y_OFFSET);
     Serial.print('\t');
-    Serial.println(w_z + w_z_offset);
+    Serial.println(w_z + W_Z_OFFSET);
   }
 
   delay(LOOP_DELAY);
