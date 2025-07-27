@@ -33,7 +33,7 @@ void setup() {
 void loop() {
   float temp_raw, temp_c, temp_f;
   float sensitivity_correction;
-  int seconds_between_measurements = 1;
+  int seconds_between_measurements = 20;
 
   if (IMU.temperatureAvailable()) {
     // after IMU.readTemperature() returns, t will contain the temperature reading
