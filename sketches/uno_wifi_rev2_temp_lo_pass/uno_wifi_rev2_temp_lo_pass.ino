@@ -14,6 +14,9 @@
 
 #include <Arduino_LSM6DS3.h>
 
+float temp_filtered = 0.0;
+float adaptation_rate = 0.10;
+
 void setup() {
   Serial.begin(9600);
   while (!Serial);
@@ -31,7 +34,7 @@ void setup() {
 }
 
 void loop() {
-  float temp_raw, temp_c, temp_f;
+  float temp_raw, temp_corrected, temp_f;
   float sensitivity_correction;
   unsigned long milliseconds_between_measurements = 1000ul * 60;
 
@@ -52,13 +55,15 @@ void loop() {
     https://github.com/arduino-libraries/Arduino_LSM6DS3/pull/12#issuecomment-1844884777
     */
     sensitivity_correction = 16.0 / 256.0;
-    temp_c = (temp_raw - 25.0) * sensitivity_correction + 25.0;
-    temp_f = temp_c * 9.0 / 5.0 + 32.0;
+    temp_corrected = (temp_raw - 25.0) * sensitivity_correction + 25.0;
+    temp_filtered = (1.0 - adaptation_rate) * temp_filtered + adaptation_rate * temp_corrected;
+    temp_f = temp_filtered * 9.0 / 5.0 + 32.0;
     
-    Serial.print(temp_c, 3);
-    Serial.print(" (");
-    Serial.print(temp_f, 3);
-    Serial.println(")");
+
+    Serial.println(temp_filtered, 3);
+    //Serial.print(" (");
+    //Serial.print(temp_f, 3);
+    //Serial.println(")");
     delay(milliseconds_between_measurements);
   }
 }
